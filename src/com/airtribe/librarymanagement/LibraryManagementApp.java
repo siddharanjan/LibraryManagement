@@ -4,6 +4,7 @@ import com.airtribe.librarymanagement.exception.LibraryException;
 import com.airtribe.librarymanagement.model.Book;
 import com.airtribe.librarymanagement.model.Loan;
 import com.airtribe.librarymanagement.model.Patron;
+import com.airtribe.librarymanagement.pattern.AuthorBasedRecommendation;
 import com.airtribe.librarymanagement.service.*;
 
 import java.util.ArrayList;
@@ -126,9 +127,16 @@ public class LibraryManagementApp {
                 patron.addPreference("Fiction");
                 patron.addPreference("Dystopian");
                 List<Book> recommendations = recommendationService.getTopRecommendations(patronId1);
-                logger.info("Recommendations for " + patron.getName() + ":");
+                logger.info("Recommendations for " + patron.getName() + " (Genre-based):");
                 recommendations.forEach(rec ->
                     logger.info("  " + rec.getTitle() + " (" + rec.getGenre() + ")"));
+
+                logger.info("\n--- Author-Based Recommendations ---");
+                recommendationService.setRecommendationStrategy(new AuthorBasedRecommendation(libraryService));
+                List<Book> authorRecommendations = recommendationService.getTopRecommendations(patronId1);
+                logger.info("Recommendations for " + patron.getName() + " (Author-based):");
+                authorRecommendations.forEach(rec ->
+                    logger.info("  " + rec.getTitle() + " by " + rec.getAuthor()));
             }
 
             // Summary
