@@ -12,11 +12,14 @@ import java.util.stream.Collectors;
 public class ReservationService {
     private static final Logger logger = Logger.getLogger(ReservationService.class.getName());
     private Map<String, ArrayList<Reservation>> reservationsByIsbn;
+    private List<NotificationObserver> observers;
     private NotificationService notificationService;
 
     public ReservationService() {
         this.reservationsByIsbn = new HashMap<>();
+        this.observers = new ArrayList<>();
         this.notificationService = new NotificationService();
+        registerObserver(this.notificationService);
     }
 
     public String makeReservation(String patronId, String isbn) throws LibraryException {
@@ -49,6 +52,19 @@ public class ReservationService {
         throw new LibraryException("Reservation not found: " + reservationId);
     }
 
+    public void registerObserver(NotificationObserver observer) {
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+            logger.info("Observer registered: " + observer.getClass().getSimpleName());
+        }
+    }
+
+    public void unregisterObserver(NotificationObserver observer) {
+        if (observers.remove(observer)) {
+            logger.info("Observer unregistered: " + observer.getClass().getSimpleName());
+        }
+    }
+
     public void notifyReservationFulfilled(String isbn) {
         ArrayList<Reservation> list = reservationsByIsbn.get(isbn);
         if (list != null && !list.isEmpty()) {
@@ -57,7 +73,9 @@ public class ReservationService {
             if (nextReservation != null) {
                 nextReservation.setStatus(Reservation.ReservationStatus.FULFILLED);
                 String message = "Your reservation for ISBN " + isbn + " is now available!";
-                notificationService.update(nextReservation.getPatronId(), message);
+                for (NotificationObserver observer : observers) {
+                    observer.update(nextReservation.getPatronId(), message);
+                }
                 logger.info("Notification sent for fulfilled reservation: " + nextReservation.getReservationId());
             }
         }

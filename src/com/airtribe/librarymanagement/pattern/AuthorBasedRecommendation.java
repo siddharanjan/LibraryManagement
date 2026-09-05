@@ -3,11 +3,17 @@ package com.airtribe.librarymanagement.pattern;
 import com.airtribe.librarymanagement.model.Book;
 import com.airtribe.librarymanagement.model.Loan;
 import com.airtribe.librarymanagement.model.Patron;
+import com.airtribe.librarymanagement.service.LibraryService;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class AuthorBasedRecommendation implements RecommendationStrategy {
     private Map<String, Integer> authorFrequency;
+    private LibraryService libraryService;
+
+    public AuthorBasedRecommendation(LibraryService libraryService) {
+        this.libraryService = libraryService;
+    }
 
     @Override
     public List<Book> getRecommendations(Patron patron, List<Book> availableBooks, int count) {
@@ -30,8 +36,11 @@ public class AuthorBasedRecommendation implements RecommendationStrategy {
     private void calculateAuthorFrequency(Patron patron) {
         authorFrequency = new HashMap<>();
         for (Loan loan : patron.getBorrowingHistory()) {
-            // In a real system, we'd fetch the book details
-            // For now, we'll use a simplified approach
+            Book book = libraryService.searchByISBN(loan.getIsbn());
+            if (book != null) {
+                String author = book.getAuthor();
+                authorFrequency.put(author, authorFrequency.getOrDefault(author, 0) + 1);
+            }
         }
     }
 }

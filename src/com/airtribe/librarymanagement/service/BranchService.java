@@ -29,7 +29,8 @@ public class BranchService {
         if (branch == null) {
             throw new LibraryException("Branch not found: " + branchId);
         }
-        branch.addBook(book);
+        Book defensiveCopy = createBookCopy(book);
+        branch.addBook(defensiveCopy);
         logger.info("Book added to branch: " + branchId + " - " + book.getIsbn());
     }
 
@@ -117,5 +118,11 @@ public class BranchService {
         }
         branches.remove(branchId);
         logger.info("Branch deleted: " + branchId);
+    }
+
+    private Book createBookCopy(Book original) {
+        return new Book(original.getIsbn(), original.getTitle(),
+                       original.getAuthor(), original.getPublicationYear(),
+                       original.getGenre(), original.getQuantity());
     }
 }
